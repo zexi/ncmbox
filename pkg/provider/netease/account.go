@@ -49,6 +49,9 @@ func (a *API) CellphoneLoginRaw(ctx context.Context, countryCode int, phone int,
 	err := a.Request(sreq.MethodPost, WEAPI("/login/cellphone"),
 		sreq.WithForm(weapi(data)),
 		sreq.WithContext(ctx),
+		sreq.WithCookies(map[string]string{
+			"os": "pc",
+		}),
 	).JSON(resp)
 	if err != nil {
 		return nil, err
