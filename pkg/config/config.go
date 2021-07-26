@@ -46,14 +46,19 @@ func ConfigPath() string {
 	return ensureFile(filepath.Join(getConfigDir(), "config.yml"))
 }
 
-var globalConfig *Config
+var globalConfig Config
 
-type Config struct {
+type Config interface {
+	GetUsername() string
+	GetPassword() string
+}
+
+type config struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-func GetConfig() (*Config, error) {
+func GetConfig() (Config, error) {
 	if globalConfig != nil {
 		return globalConfig, nil
 	}
@@ -62,7 +67,7 @@ func GetConfig() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfg := new(Config)
+	cfg := new(config)
 	if err := yaml.Unmarshal(content, cfg); err != nil {
 		return nil, err
 	}
@@ -70,7 +75,7 @@ func GetConfig() (*Config, error) {
 	return cfg, nil
 }
 
-func EnsureGetConfig() *Config {
+func EnsureGetConfig() Config {
 	cfg, err := GetConfig()
 	if err != nil {
 		panic(err)
@@ -78,7 +83,7 @@ func EnsureGetConfig() *Config {
 	return cfg
 }
 
-func (c *Config) Save() error {
+func (c *config) Save() error {
 	content, err := yaml.Marshal(c)
 	if err != nil {
 		return errors.Wrap(err, "marshal to yaml")
@@ -87,4 +92,12 @@ func (c *Config) Save() error {
 		return errors.Wrap(err, "save configfile")
 	}
 	return nil
+}
+
+func (c *config) GetUsername() string {
+	return c.Username
+}
+
+func (c *config) GetPassword() string {
+	return c.Password
 }

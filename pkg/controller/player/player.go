@@ -12,14 +12,18 @@ type Song struct {
 	Url string
 }
 
-type Player struct {
+type Player interface {
+	PlaySong(*Song) error
+}
+
+type player struct {
 	currentSong *Song
 	// player is backend mpg123 process
 	player *mpg123
 }
 
-func NewPlayer() (*Player, error) {
-	player := &Player{
+func NewPlayer() (Player, error) {
+	player := &player{
 		player: newMPG123(),
 	}
 	if err := player.player.Start(); err != nil {
@@ -28,7 +32,7 @@ func NewPlayer() (*Player, error) {
 	return player, nil
 }
 
-func (p *Player) PlaySong(song *Song) error {
+func (p *player) PlaySong(song *Song) error {
 	if err := p.player.Play(song.Url); err != nil {
 		return err
 	}

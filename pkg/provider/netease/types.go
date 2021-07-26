@@ -1,7 +1,10 @@
 package netease
 
 import (
+	"fmt"
 	"strconv"
+
+	"github.com/zexi/ncmbox/pkg/model"
 )
 
 type CommonResponse struct {
@@ -19,6 +22,14 @@ func (c *CommonResponse) errorMessage() string {
 type ObjectMeta struct {
 	Id   int    `json:"id"`
 	Name string `json:"name"`
+}
+
+func (meta ObjectMeta) GetId() string {
+	return fmt.Sprintf("%d", meta.Id)
+}
+
+func (meta ObjectMeta) GetName() string {
+	return meta.Name
 }
 
 type Song struct {
@@ -69,6 +80,14 @@ type PlaylistDetailResponse struct {
 	PlaylistDetail PlaylistDetail `json:"playlist"`
 }
 
+func (r *PlaylistDetail) GetSongs() []model.Song {
+	songs := make([]model.Song, 0)
+	for _, obj := range r.Tracks {
+		songs = append(songs, obj)
+	}
+	return songs
+}
+
 // https://binaryify.github.io/NeteaseCloudMusicApi/#/?id=_1-%e6%89%8b%e6%9c%ba%e7%99%bb%e5%bd%95
 type LoginResponse struct {
 	CommonResponse
@@ -94,6 +113,10 @@ type SongURL struct {
 	Id   int    `json:"id"`
 	BR   int    `json:"br"`
 	URL  string `json:"url"`
+}
+
+func (s SongURL) GetURL() string {
+	return s.URL
 }
 
 type SongURLResponse struct {

@@ -3,76 +3,53 @@ package ui
 import (
 	"context"
 
+	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
-	"yunion.io/x/log"
 
-	"github.com/zexi/ncmbox/pkg/client"
-	"github.com/zexi/ncmbox/pkg/config"
-	"github.com/zexi/ncmbox/pkg/player"
-	"github.com/zexi/ncmbox/pkg/version"
+	"github.com/zexi/ncmbox/pkg/controller"
+	"github.com/zexi/ncmbox/pkg/model"
 )
 
-type UI struct {
-	*tview.Application
+type MainUI interface {
+	Run() error
+
+	GetApp() *tview.Application
+	GetController() controller.Controller
+
+	GetPlaylist() Playlist
+	GetSongList() SongList
 }
 
-func NewUI() *UI {
-	ui := &UI{
-		Application: tview.NewApplication(),
-	}
-	cfg := config.EnsureGetConfig()
-	log.Infof("Config: %v", cfg)
-	cli := client.NewClient(cfg.Username, cfg.Password)
-	if err := cli.Login(context.TODO()); err != nil {
-		log.Fatalf("login error: %v", err)
-	}
-	player, err := player.NewPlayer()
-	if err != nil {
-		log.Fatalf("init player error: %v", err)
-	}
-	ui.init(cli, player)
-	return ui
+type Playlist interface {
+	tview.Primitive
+
+	Refresh(ctx context.Context) error
 }
 
-func (ui *UI) init(cli *client.Client, player *player.Player) {
-	pages := tview.NewPages()
+type SongList interface {
+	tview.Primitive
 
-	// playlists UI
-	playlistUI := tview.NewList().ShowSecondaryText(false)
-	playlistUI.SetBorder(true).SetTitle("Playlists")
-
-	// songs UI
-	songsUI := tview.NewList().ShowSecondaryText(false)
-	songsUI.SetBorder(true).SetTitle("Songs")
-
-	NewPlaylists(cli, player, ui.Application, playlistUI, songsUI)
-
-	// Create the layout
-	flex := tview.NewFlex().
-		AddItem(playlistUI, 0, 1, true).
-		AddItem(songsUI, 0, 1, false)
-	pages.AddPage("*finder*", flex, true, true)
-	ui.SetRoot(pages, true).SetFocus(pages)
+	SetSongs([]model.Song)
 }
 
-func (ui *UI) Run() error {
-	return ui.Application.Run()
+type View interface {
+	SetInputCapture(capture func(event *tcell.EventKey) *tcell.EventKey) *tview.Box
 }
 
-func (ui *UI) LoginCellphonePage() tview.Primitive {
-	form := tview.NewForm().
-		AddInputField("手机号: ", "", 9, ValidateLoginPhone, nil).
-		AddPasswordField("密码: ", "", 0, '*', nil)
-	form.SetBorder(true).SetTitle("请输入登录信息")
-	return form
-}
-
-type VersionView struct {
-	*tview.TextView
-}
-
-func NewVersionView() *VersionView {
-	return &VersionView{
-		TextView: tview.NewTextView().SetText(version.GetJsonString()),
-	}
+func SetDefaultShortcuts(view View) {
+	view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Rune() == 'h' {
+			return tcell.NewEventKey(tcell.KeyLeft, ' ', tcell.ModNone)
+		}
+		if event.Rune() == 'j' {
+			return tcell.NewEventKey(tcell.KeyDown, ' ', tcell.ModNone)
+		}
+		if event.Rune() == 'k' {
+			return tcell.NewEventKey(tcell.KeyUp, ' ', tcell.ModNone)
+		}
+		if event.Rune() == 'l' {
+			return tcell.NewEventKey(tcell.KeyRight, ' ', tcell.ModNone)
+		}
+		return event
+	})
 }

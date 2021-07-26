@@ -1,15 +1,21 @@
 package main
 
 import (
-	"log"
 	"os"
+
+	"yunion.io/x/log"
 
 	"github.com/zexi/ncmbox/pkg/app"
 )
 
 func main() {
-	if err := app.NewApp().Start(); err != nil {
-		log.Printf("Start app error: %v", err)
+	app, err := app.NewApp()
+	if err != nil {
+		log.Errorf("New app error: %v", err)
+		os.Exit(1)
+	}
+	if err := app.Start(); err != nil {
+		log.Errorf("Start app error: %v", err)
 		os.Exit(1)
 	}
 }
