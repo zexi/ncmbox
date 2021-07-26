@@ -29,7 +29,8 @@ type Playlist interface {
 type SongList interface {
 	tview.Primitive
 
-	SetSongs([]model.Song)
+	GetCurrentPlaylist() model.Playlist
+	SetSongs(model.Playlist, []model.Song)
 }
 
 type View interface {

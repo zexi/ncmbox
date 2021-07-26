@@ -30,6 +30,7 @@ func NewUI(ctrl controller.Controller) ui.MainUI {
 	if err := ui.ctrl.Login(context.TODO()); err != nil {
 		log.Fatalf("login error: %v", err)
 	}
+
 	ui.init()
 	return ui
 }

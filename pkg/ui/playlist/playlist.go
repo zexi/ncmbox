@@ -54,13 +54,16 @@ func (p *playlist) Refresh(ctx context.Context) error {
 
 func (p *playlist) onSelected(ctx context.Context, obj model.Playlist) func() {
 	return func() {
-		details, err := p.ctrl.GetUserPlaylist(ctx, obj.GetId())
-		if err != nil {
-			log.Errorf("Get user playlist %v: %v", obj.GetName(), err)
-			return
+		curPlaylist := p.songsUI.GetCurrentPlaylist()
+		if curPlaylist == nil || curPlaylist.GetId() != obj.GetId() {
+			details, err := p.ctrl.GetUserPlaylist(ctx, obj.GetId())
+			if err != nil {
+				log.Errorf("Get user playlist %v: %v", obj.GetName(), err)
+				return
+			}
+			p.songsUI.SetSongs(obj, details.GetSongs())
 		}
 
-		p.songsUI.SetSongs(details.GetSongs())
 		p.mainUI.GetApp().SetFocus(p.songsUI)
 	}
 }

@@ -9,6 +9,8 @@ import (
 )
 
 func main() {
+	log.SetLogLevelByString(log.Logger(), "info")
+
 	app, err := app.NewApp()
 	if err != nil {
 		log.Errorf("New app error: %v", err)

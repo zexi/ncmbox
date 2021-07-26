@@ -68,7 +68,7 @@ func (helper *mpg123) Start() error {
 
 func (helper *mpg123) Play(url string) error {
 	cmd := fmt.Sprintf("L %s\n", url)
-	log.Infof("play %s", url)
+	log.Debugf("play %s", url)
 	if _, err := helper.stdin.Write([]byte(cmd)); err != nil {
 		return err
 	}

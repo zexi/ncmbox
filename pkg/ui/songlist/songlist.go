@@ -1,6 +1,9 @@
 package songlist
 
 import (
+	"fmt"
+
+	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 	"yunion.io/x/log"
 
@@ -16,7 +19,8 @@ type songList struct {
 
 	ctrl controller.Controller
 
-	songs []model.Song
+	playlist model.Playlist
+	songs    []model.Song
 }
 
 func NewSongList(mainUI ui.MainUI) ui.SongList {
@@ -35,13 +39,16 @@ func NewSongList(mainUI ui.MainUI) ui.SongList {
 		mainUI.GetApp().SetFocus(mainUI.GetPlaylist())
 	})
 
+	sl.SetSelectedBackgroundColor(tcell.ColorYellowGreen)
+
 	return sl
 }
 
 func (ui *songList) refresh() {
 	ui.Clear()
-	for _, song := range ui.songs {
-		ui.AddItem(song.GetName(), "", 0, ui.onSelected(song))
+	for idx, song := range ui.songs {
+		key := fmt.Sprintf("[%d] %s", idx, song.GetName())
+		ui.AddItem(key, "", 0, ui.onSelected(song))
 	}
 }
 
@@ -53,7 +60,12 @@ func (ui *songList) onSelected(song model.Song) func() {
 	}
 }
 
-func (ui *songList) SetSongs(data []model.Song) {
-	ui.songs = data
+func (ui songList) GetCurrentPlaylist() model.Playlist {
+	return ui.playlist
+}
+
+func (ui *songList) SetSongs(playlist model.Playlist, songs []model.Song) {
+	ui.playlist = playlist
+	ui.songs = songs
 	ui.refresh()
 }
