@@ -64,6 +64,6 @@ func (p *playlist) onSelected(ctx context.Context, obj model.Playlist) func() {
 			p.songsUI.SetSongs(obj, details.GetSongs())
 		}
 
-		p.mainUI.GetApp().SetFocus(p.songsUI)
+		p.mainUI.SetFocus(p.songsUI)
 	}
 }

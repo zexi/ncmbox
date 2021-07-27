@@ -13,11 +13,14 @@ import (
 type MainUI interface {
 	Run() error
 
-	GetApp() *tview.Application
+	// GetApp() *tview.Application
 	GetController() controller.Controller
 
 	GetPlaylist() Playlist
 	GetSongList() SongList
+
+	SetFocus(tview.Primitive)
+	QueueEvent(es ...tcell.Event)
 }
 
 type Playlist interface {
@@ -53,4 +56,16 @@ func SetDefaultShortcuts(view View) {
 		}
 		return event
 	})
+}
+
+func NewSingleKeyEvent(key tcell.Key) tcell.Event {
+	return tcell.NewEventKey(key, ' ', tcell.ModNone)
+}
+
+func NewEventKeyDown() tcell.Event {
+	return NewSingleKeyEvent(tcell.KeyDown)
+}
+
+func NewEventKeyEnter() tcell.Event {
+	return NewSingleKeyEvent(tcell.KeyEnter)
 }

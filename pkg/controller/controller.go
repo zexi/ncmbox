@@ -20,21 +20,18 @@ type Controller interface {
 }
 
 type controller struct {
-	cli    client.Client
-	player player.Player
-
+	cli            client.Client
 	songController SongController
 }
 
 func NewController(cli client.Client) (Controller, error) {
-	player, err := player.NewPlayer()
+	songCtrl, err := newSongController(cli)
 	if err != nil {
-		return nil, errors.Wrap(err, "init player")
+		return nil, errors.Wrap(err, "new song controller")
 	}
 	c := &controller{
 		cli:            cli,
-		player:         player,
-		songController: newSongController(cli, player),
+		songController: songCtrl,
 	}
 	return c, nil
 }
@@ -61,18 +58,31 @@ func (c controller) GetSongController() SongController {
 
 type SongController interface {
 	Play(song model.Song) error
+
+	SetFinishCallback(func())
+	SetPauseCallback(func())
 }
 
 type songController struct {
 	cli    client.Client
 	player player.Player
+
+	currentSong model.SongURL
+
+	finishCallback func()
+	pauseCallback  func()
 }
 
-func newSongController(cli client.Client, player player.Player) SongController {
-	return &songController{
-		cli:    cli,
-		player: player,
+func newSongController(cli client.Client) (SongController, error) {
+	ctrl := &songController{
+		cli: cli,
 	}
+	player, err := player.NewPlayer(ctrl.onFinish)
+	if err != nil {
+		return nil, errors.Wrap(err, "init player")
+	}
+	ctrl.player = player
+	return ctrl, nil
 }
 
 func (c *songController) Play(song model.Song) error {
@@ -80,7 +90,35 @@ func (c *songController) Play(song model.Song) error {
 	if err != nil {
 		return errors.Wrap(err, "get song url")
 	}
+	c.currentSong = urls[0]
+	return c.playSongURL(c.currentSong)
+}
+
+func (c *songController) playSongURL(url model.SongURL) error {
 	return c.player.PlaySong(&player.Song{
-		Url: urls[0].GetURL(),
+		Url: url.GetURL(),
 	})
+}
+
+func (c *songController) SetFinishCallback(f func()) {
+	c.finishCallback = f
+}
+
+func (c *songController) SetPauseCallback(f func()) {
+	c.pauseCallback = f
+}
+
+func (c *songController) onFinish() {
+	if c.finishCallback == nil {
+		c.playSongURL(c.currentSong)
+		return
+	}
+	c.finishCallback()
+}
+
+func (c *songController) onPause() {
+	if c.pauseCallback == nil {
+		return
+	}
+	c.pauseCallback()
 }

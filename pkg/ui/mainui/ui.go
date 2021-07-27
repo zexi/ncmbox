@@ -3,6 +3,7 @@ package mainui
 import (
 	"context"
 
+	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 	"yunion.io/x/log"
 
@@ -39,8 +40,18 @@ func (ui *mainUI) GetController() controller.Controller {
 	return ui.ctrl
 }
 
-func (ui *mainUI) GetApp() *tview.Application {
+func (ui *mainUI) getApp() *tview.Application {
 	return ui.app
+}
+
+func (ui *mainUI) SetFocus(item tview.Primitive) {
+	ui.getApp().SetFocus(item)
+}
+
+func (ui *mainUI) QueueEvent(es ...tcell.Event) {
+	for _, e := range es {
+		ui.getApp().QueueEvent(e)
+	}
 }
 
 func (ui *mainUI) GetPlaylist() ui.Playlist {
@@ -66,7 +77,7 @@ func (ui *mainUI) init() {
 		AddItem(playlistUI, 0, 1, true).
 		AddItem(songsUI, 0, 1, false)
 	pages.AddPage("*finder*", flex, true, true)
-	ui.GetApp().SetRoot(pages, true).SetFocus(pages)
+	ui.getApp().SetRoot(pages, true).SetFocus(pages)
 }
 
 func (ui *mainUI) Run() error {
@@ -74,7 +85,7 @@ func (ui *mainUI) Run() error {
 		return err
 	}
 
-	return ui.GetApp().Run()
+	return ui.getApp().Run()
 }
 
 /*

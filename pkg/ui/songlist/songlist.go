@@ -19,8 +19,9 @@ type songList struct {
 
 	ctrl controller.Controller
 
-	playlist model.Playlist
-	songs    []model.Song
+	playlist    model.Playlist
+	songs       []model.Song
+	currentSong model.Song
 }
 
 func NewSongList(mainUI ui.MainUI) ui.SongList {
@@ -36,7 +37,7 @@ func NewSongList(mainUI ui.MainUI) ui.SongList {
 	ui.SetDefaultShortcuts(sl)
 
 	songsUI.SetDoneFunc(func() {
-		mainUI.GetApp().SetFocus(mainUI.GetPlaylist())
+		mainUI.SetFocus(mainUI.GetPlaylist())
 	})
 
 	sl.SetSelectedBackgroundColor(tcell.ColorYellowGreen)
@@ -54,10 +55,22 @@ func (ui *songList) refresh() {
 
 func (ui *songList) onSelected(song model.Song) func() {
 	return func() {
-		if err := ui.ctrl.GetSongController().Play(song); err != nil {
+		songCtrl := ui.ctrl.GetSongController()
+		songCtrl.SetFinishCallback(ui.onFinish)
+
+		ui.currentSong = song
+		if err := songCtrl.Play(song); err != nil {
 			log.Errorf("Play song %s error: %v", song.GetName(), err)
 		}
 	}
+}
+
+func (lui *songList) onFinish() {
+	log.Debugf("====on finish called: %d", lui.GetCurrentItem()+1)
+	// ui.SetCurrentItem(ui.GetCurrentItem() + 1)
+	lui.mainUI.QueueEvent(
+		ui.NewEventKeyDown(),
+		ui.NewEventKeyEnter())
 }
 
 func (ui songList) GetCurrentPlaylist() model.Playlist {
